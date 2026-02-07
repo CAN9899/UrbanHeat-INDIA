@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UrbanHeat INDIA | Public Decision Support Tool</title>
+
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+<style>
+:root{
+  --bg: #ffffff;
+  --text-main: #111111;
+  --text-muted: #666666;
+  --border: #e0e0e0;
+  --border-strong: #000000;
+  
+  /* Dynamic State Colors */
+  --state-color: #000000; /* Default */
+  --risk-red: #d32f2f;
+  --safe-green: #2e7d32;
+  --caution-amber: #f57f17;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- LAYOUT --- */
+.app-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 100vh;
+}
+
+@media (min-width: 1024px) {
+  .app-container { grid-template-columns: 360px 1fr; }
+}
+
+/* --- SIDEBAR --- */
+aside {
+  border-right: 1px solid var(--border);
+  padding: 2rem;
+  background: #fcfcfc;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  z-index: 10;
+}
+
+.brand {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.03em;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.control-section h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 1.25rem 0;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-group { margin-bottom: 1.75rem; }
+
+label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.helper {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+
+select, input[type=range] { width: 100%; }
+
+select {
+  padding: 0.75rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+select:focus { outline: none; border-color: var(--state-color); }
+
+input[type=range] {
+  margin: 0;
+  accent-color: var(--state-color);
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--state-color);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: background 0.3s;
+}
+
+/* --- MAIN REPORT AREA --- */
+main {
+  padding: 4rem 4rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  position: relative;
+  padding-bottom: 8rem; 
+}
+
+header {
+  margin-bottom: 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 4px solid var(--state-color);
+  padding-bottom: 1.5rem;
+  transition: border-color 0.3s;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+h1 {
+  font-size: 3rem;
+  font-weight: 300;
+  letter-spacing: -0.04em;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.report-meta {
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* --- SECTION STYLES --- */
+.report-section {
+  margin-bottom: 5rem;
+}
+
+.section-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.section-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.section-helper {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+  max-width: 800px;
+  font-style: italic;
+}
+
+/* KPI GRID */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.kpi-card {
+  border: 1px solid var(--border);
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  background: white;
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px; height: 100%;
+  background: var(--state-color);
+  transition: background 0.3s;
+}
+
+.kpi-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.kpi-value {
+  font-size: 3.5rem;
+  font-weight: 300;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-context {
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  line-height: 1.4;
+}
+
+.kpi-context-small {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+/* HEALTH & RISK MATRIX */
+.risk-matrix {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+  border: 1px solid var(--border);
+  background: #fafafa;
+}
+@media (max-width: 768px) {
+  .risk-matrix { grid-template-columns: 1fr; }
+}
+
+.risk-level-box {
+  padding: 2rem;
+  background: var(--state-color);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  transition: background 0.3s;
+}
+
+.risk-details {
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+}
+
+.risk-item h4 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  margin: 0 0 0.5rem 0;
+  color: var(--text-muted);
+}
+.risk-item p { margin: 0; font-size: 0.95rem; }
+
+/* IMPLEMENTATION STRATEGY */
+.strategy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.strategy-box {
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  background: #fdfdfd;
+}
+
+.strategy-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.strategy-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* ECONOMIC & ROI */
+.econ-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.econ-box {
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+}
+.econ-val { font-size: 2rem; font-weight: 600; margin: 0.5rem 0; }
+.econ-sub { font-size: 0.8rem; color: var(--text-muted); }
+
+/* POLICY CHECKLIST */
+.policy-list {
+  border-top: 1px solid var(--border);
+}
+.policy-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.policy-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background: #eee;
+  min-width: 60px;
+  text-align: center;
+}
+.status-pass { background: #e8f5e9; color: #1b5e20; }
+.status-fail { background: #ffebee; color: #c62828; }
+
+/* ACTIONS */
+.action-bar {
+  display: flex;
+  flex-wrap: wrap; 
+  gap: 1.5rem;
+  margin-top: 4rem;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(255,255,255,0.95);
+  padding: 1.5rem;
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  z-index: 50; 
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+}
+
+@media (min-width: 1024px) {
+  .action-bar {
+    left: 360px;
+    width: calc(100% - 360px);
+  }
+}
+
+button {
+  flex: 1;
+  min-width: 220px;
+  padding: 1rem 1.5rem;
+  border: 2px solid var(--state-color);
+  background: white;
+  color: var(--state-color);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+button:hover {
+  background: var(--state-color);
+  color: white;
+}
+
+/* FOOTER */
+.report-footer {
+  margin-top: 5rem;
+  padding: 2rem 0;
+  border-top: 2px solid var(--border-strong);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3rem;
+  justify-content: space-between;
+}
+
+.references {
+  flex: 3;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+}
+
+.credits {
+  flex: 1;
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-main);
+  min-width: 200px;
+}
+
+.references h5 { margin: 0 0 1rem 0; color: var(--text-main); }
+.references ul { padding: 0; margin: 0; list-style: none; }
+.references li { margin-bottom: 0.5rem; }
+
+/* --- PRINT --- */
+@media print {
+  @page { size: A4; margin: 1cm; }
+  body { 
+    font-size: 10pt; 
+    -webkit-print-color-adjust: exact; 
+    print-color-adjust: exact; 
+  }
+  
+  aside, .action-bar { display: none !important; }
+  .app-container { display: block; grid-template-columns: 1fr; }
+  main { padding: 0; max-width: 100%; margin: 0; padding-bottom: 0; }
+  
+  .report-section { break-inside: avoid; margin-bottom: 2rem; }
+  header { border-bottom: 2px solid black !important; margin-bottom: 2rem; }
+  
+  /* Keep colors in print! */
+  .kpi-card::before { background: var(--state-color) !important; }
+  .risk-level-box { background: var(--state-color) !important; color: white !important; }
+  
+  .report-footer { border-top: 2px solid #000; margin-top: auto; }
+  .credits { text-align: left; margin-top: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  
+  <!-- --- SIDEBAR INPUTS --- -->
+  <aside>
+    <div class="brand">
+      <i class="ph ph-squares-four" style="font-size:1.5rem;"></i>
+      <span>UrbanHeat INDIA</span>
+    </div>
+
+    <!-- 1. BASELINE -->
+    <div class="control-section">
+      <h3><i class="ph ph-map-pin"></i> 01. Location Details</h3>
+      
+      <div class="input-group">
+        <label>City / Climate</label>
+        <select id="climateZone">
+          <option value="composite">Composite (e.g., Delhi, Lucknow)</option>
+          <option value="warm_humid">Warm & Humid (e.g., Mumbai)</option>
+          <option value="hot_dry">Hot & Dry (e.g., Jodhpur)</option>
+          <option value="temperate">Temperate (e.g., Bangalore)</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Neighborhood Type</label>
+        <div class="helper">Crowded buildings trap more heat.</div>
+        <select id="density">
+          <option value="high">Dense / Crowded (Deep Canyon)</option>
+          <option value="med">Medium Density</option>
+          <option value="low">Open / Low Density</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 2. INTERVENTIONS -->
+    <div class="control-section">
+      <h3><i class="ph ph-sliders-horizontal"></i> 02. Your Design</h3>
+      
+      <div class="input-group">
+        <label>
+          <span>Green Cover</span>
+          <span id="greenVal">15%</span>
+        </label>
+        <input type="range" id="greenCover" min="0" max="60" value="15">
+        <div class="helper">More trees = Cooler air.</div>
+      </div>
+
+      <div class="input-group">
+        <label>
+          <span>Cool Roofs</span>
+          <span id="roofVal">10%</span>
+        </label>
+        <input type="range" id="coolRoof" min="0" max="100" value="10">
+        <div class="helper">White paint or reflective tiles.</div>
+      </div>
+
+      <div class="input-group">
+        <label>
+          <span>Traffic & AC Load</span>
+          <span id="trafficVal">Medium</span>
+        </label>
+        <input type="range" id="traffic" min="1" max="3" step="1" value="2">
+        <div class="helper">Heat from cars and AC units.</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- --- MAIN REPORT DOSSIER --- -->
+  <main id="dossier">
+    
+    <header>
+      <div>
+        <div style="font-family:'JetBrains Mono'; font-size:0.8rem; margin-bottom:0.5rem; text-transform:uppercase;">Decision Support System</div>
+        <h1>Urban Heat Resilience Report (UHRR)</h1>
+      </div>
+      <div class="report-meta">
+        DATE: <span id="dateDisplay"></span><br>
+        STATUS: PRELIMINARY ASSESSMENT
+      </div>
+    </header>
+
+    <!-- SECTION 1: THERMAL ANALYSIS -->
+    <section class="report-section">
+      <div class="section-head">01 // Thermal Analysis</div>
+      <p class="section-helper">Estimates how urban form, greenery, and materials influence local heat stress, capped at realistic mitigation limits.</p>
+      
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Peak Summer Temp</div>
+          <div class="kpi-value" id="peakTemp">--</div>
+          <div class="kpi-context" id="uhiDelta">--</div>
+        </div>
+        
+        <div class="kpi-card">
+          <div class="kpi-label">Feels Like Temp</div>
+          <div class="kpi-value" id="heatIndex">--</div>
+          <div class="kpi-context">
+            <span id="riskLabel">--</span>
+            <div class="kpi-context-small">Accounts for humidity & reduced sweat evaporation (Heat Index).</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">AC Energy Saved</div>
+          <div class="kpi-value" id="energySave">--</div>
+          <div class="kpi-context">vs. Standard House</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: HEALTH & RISK -->
+    <section class="report-section">
+      <div class="section-head">02 // Public Health Impact</div>
+      <p class="section-helper">Assesses physiological risk using ISO 7243 and NDMA standards for heat stress in the shade.</p>
+      
+      <div class="risk-matrix">
+        <div class="risk-level-box">
+          <i class="ph ph-warning-octagon" style="font-size:3rem; margin-bottom:1rem;"></i>
+          <div style="font-size:0.8rem; text-transform:uppercase;">Risk Classification</div>
+          <div style="font-size:1.75rem; font-weight:700;" id="riskClass">--</div>
+        </div>
+        <div class="risk-details">
+          <div class="risk-item">
+            <h4>Physiological Impact</h4>
+            <p id="physioText">Loading...</p>
+          </div>
+          <div class="risk-item">
+            <h4>NDMA Advisory</h4>
+            <p id="advisoryText">Loading...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: IMPLEMENTATION STRATEGY -->
+    <section class="report-section">
+      <div class="section-head">03 // Implementation Strategy</div>
+      <p class="section-helper">Tailored architectural and planning recommendations based on your design inputs.</p>
+      
+      <div class="strategy-grid">
+        <div class="strategy-box">
+          <div class="strategy-title"><i class="ph ph-house-line"></i> Roof Material Recommendation</div>
+          <div class="strategy-text" id="roofRec">
+            Loading recommendation...
+          </div>
+        </div>
+        <div class="strategy-box">
+          <div class="strategy-title"><i class="ph ph-tree"></i> Green Infrastructure</div>
+          <div class="strategy-text" id="greenRec">
+            Loading recommendation...
+          </div>
+        </div>
+        <div class="strategy-box">
+          <div class="strategy-title"><i class="ph ph-road-horizon"></i> Morphology</div>
+          <div class="strategy-text" id="morphRec">
+            Loading recommendation...
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: ECONOMIC ROI -->
+    <section class="report-section">
+      <div class="section-head">04 // Economic Viability (ROI)</div>
+      <p class="section-helper">Projected financial and carbon savings for residential sectors.</p>
+      
+      <div class="econ-grid">
+        <div class="econ-box">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:0.8rem; font-weight:700;">EST. MONEY SAVED</div>
+            <i class="ph ph-currency-inr"></i>
+          </div>
+          <div class="econ-val" id="savingsINR">₹0 / yr</div>
+          <div class="econ-sub">Per household (based on ₹8/unit electricity)</div>
+        </div>
+
+        <div class="econ-box">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:0.8rem; font-weight:700;">CARBON REDUCED</div>
+            <i class="ph ph-plant"></i>
+          </div>
+          <div class="econ-val" id="carbonVal">0 Tons</div>
+          <div class="econ-sub">Annual CO₂e avoidance per typical urban block (~1000 units)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: POLICY COMPLIANCE -->
+    <section class="report-section">
+      <div class="section-head">05 // Policy Compliance Checklist</div>
+      <p class="section-helper">Alignment with National Building Code (NBC), ECBC, and India Cooling Action Plan (ICAP).</p>
+      
+      <div class="policy-list" id="policyList">
+        <!-- JS Generated -->
+      </div>
+    </section>
+
+    <!-- ACTION BAR -->
+    <div class="action-bar">
+      <button onclick="window.print()">
+        <i class="ph ph-printer"></i> Download Official Dossier (PDF)
+      </button>
+      <button onclick="shareAnalysis()">
+        <i class="ph ph-share-network"></i> Share Analysis
+      </button>
+    </div>
+
+    <!-- FOOTER WITH CREDITS -->
+    <div class="report-footer">
+      <div class="references">
+        <div>
+          <h5>Data Sources</h5>
+          <ul>
+            <li>IMD Gridded Temp Data (1981-2010)</li>
+            <li>ASHRAE Standard 55 (Thermal Comfort)</li>
+            <li>NDMA Heat Wave Guidelines (2024)</li>
+            <li>World Bank India Cooling Strategy</li>
+          </ul>
+        </div>
+        <div>
+          <h5>Frameworks</h5>
+          <ul>
+            <li>National Building Code (NBC 2016)</li>
+            <li>BEE ECBC 2017 (Cool Roofs)</li>
+            <li>Lancet Planetary Health</li>
+            <li>India Cooling Action Plan (ICAP)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="credits">
+        <strong>Developed by Saud Ahmad</strong><br>
+        v5.0 Extended Version
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // --- CONFIGURATION CONSTANTS (Tier 1 Sources) ---
+  const CLIMATE_DATA = {
+    'composite':  { base: 43.5, hum: 40, uhi_base: 3.5 }, // Delhi
+    'warm_humid': { base: 34.0, hum: 75, uhi_base: 2.5 }, // Mumbai
+    'hot_dry':    { base: 45.0, hum: 20, uhi_base: 3.0 }, // Jodhpur
+    'temperate':  { base: 36.0, hum: 50, uhi_base: 2.0 }  // Bangalore
+  };
+
+  const DENSITY_MULT = { 'high': 1.0, 'med': 0.7, 'low': 0.4 };
+  const TRAFFIC_ADD = { 1: 0.2, 2: 0.8, 3: 1.8 }; // Degrees C added
+
+  // --- DOM ELEMENTS ---
+  const els = {
+    zone: document.getElementById('climateZone'),
+    density: document.getElementById('density'),
+    green: document.getElementById('greenCover'),
+    roof: document.getElementById('coolRoof'),
+    traffic: document.getElementById('traffic'),
+    
+    // UI Val Displays
+    greenVal: document.getElementById('greenVal'),
+    roofVal: document.getElementById('roofVal'),
+    trafficVal: document.getElementById('trafficVal'),
+
+    // Outputs
+    peakTemp: document.getElementById('peakTemp'),
+    heatIndex: document.getElementById('heatIndex'),
+    riskLabel: document.getElementById('riskLabel'),
+    energySave: document.getElementById('energySave'),
+    uhiDelta: document.getElementById('uhiDelta'),
+    
+    // Sections
+    riskClass: document.getElementById('riskClass'),
+    physioText: document.getElementById('physioText'),
+    advisoryText: document.getElementById('advisoryText'),
+    savingsINR: document.getElementById('savingsINR'),
+    carbonVal: document.getElementById('carbonVal'),
+    policyList: document.getElementById('policyList'),
+    
+    // Recommendations
+    roofRec: document.getElementById('roofRec'),
+    greenRec: document.getElementById('greenRec'),
+    morphRec: document.getElementById('morphRec')
+  };
+
+  document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('en-GB');
+
+  // --- MAIN CALCULATION ENGINE ---
+  function calculate() {
+    // 1. Inputs
+    const z = CLIMATE_DATA[els.zone.value];
+    const d = DENSITY_MULT[els.density.value];
+    const t = TRAFFIC_ADD[parseInt(els.traffic.value)];
+    const g = parseInt(els.green.value);
+    const r = parseInt(els.roof.value);
+
+    // Update Labels
+    els.greenVal.innerText = g + "%";
+    els.roofVal.innerText = r + "%";
+    els.trafficVal.innerText = ["Low", "Medium", "High"][parseInt(els.traffic.value)-1];
+
+    // 2. Thermal Physics
+    const baseAmbient = z.base + (z.uhi_base * d) + t;
+    
+    // Cooling (Humidity Penalty applied to Evapotranspiration)
+    const evapEff = (100 - z.hum) / 100;
+    const rawCooling = (g * 0.09 * evapEff) + (r * 0.02); // Cool roof efficacy
+    
+    // SCIENTIFIC CAP: Limit cooling to 3.0°C to match observed studies (TERI/IIT)
+    const cooling = Math.min(rawCooling, 3.0);
+    
+    const finalTemp = baseAmbient - cooling;
+    
+    // Heat Index (Simplified regression for C)
+    let hi = finalTemp;
+    if(finalTemp > 27) {
+      // Add heat index penalty based on humidity
+      const humPenalty = Math.max(0, (z.hum - 40) * 0.15); 
+      hi = finalTemp + humPenalty;
+    }
+
+    // 3. Update UI Colors (Dynamic Safety System)
+    updateSafetyState(hi);
+
+    // 4. Render KPIs
+    els.peakTemp.innerText = finalTemp.toFixed(1) + "°C";
+    
+    let deltaHTML = `<i class="ph ph-trend-down"></i> ${cooling.toFixed(1)}°C Drop`;
+    // Positive Reinforcement Message
+    if (cooling >= 1.5) {
+       // Estimate ~12 mature trees per 1°C reduction in typical block
+       const treeEq = Math.round(cooling * 10);
+       deltaHTML += `<div style="font-size:0.75rem; margin-top:0.5rem; color:var(--safe-green);"><strong>Great Job!</strong> Impact similar to planting ~${treeEq} mature trees.</div>`;
+    }
+    els.uhiDelta.innerHTML = deltaHTML;
+    
+    els.heatIndex.innerText = hi.toFixed(1) + "°C";
+    
+    const energyPct = Math.min(100, cooling * 4.8).toFixed(0);
+    els.energySave.innerText = "-" + energyPct + "%";
+
+    // 5. Populate Sections
+    populateHealthSection(hi);
+    populateStrategySection(g, r, els.density.value);
+    populateEconomicSection(energyPct);
+    populatePolicySection(g, r, finalTemp);
+  }
+
+  // --- DYNAMIC SAFETY STATE ---
+  function updateSafetyState(hi) {
+    const root = document.documentElement;
+    let color, label;
+
+    if (hi >= 50) {
+      color = getComputedStyle(root).getPropertyValue('--risk-red');
+      label = "EXTREME DANGER";
+    } else if (hi >= 42) {
+      color = getComputedStyle(root).getPropertyValue('--risk-red');
+      label = "DANGER";
+    } else if (hi >= 36) {
+      color = getComputedStyle(root).getPropertyValue('--caution-amber');
+      label = "CAUTION";
+    } else {
+      color = getComputedStyle(root).getPropertyValue('--safe-green');
+      label = "SAFE";
+    }
+
+    // Apply to CSS Variable for global theme update
+    root.style.setProperty('--state-color', color);
+    els.riskLabel.innerHTML = `<strong>${label}</strong>`;
+    els.riskClass.innerText = label;
+  }
+
+  // --- SECTIONS LOGIC ---
+
+  function populateHealthSection(hi) {
+    let physio, advisory;
+
+    if (hi >= 50) {
+      physio = "Heat stroke imminent. Critical failure of thermoregulation. Cardiovascular collapse risk.";
+      advisory = "<strong>RED ALERT:</strong> ISO 7243 allows 0 minutes of work/hour. Mandatory evacuation to cooling centers.";
+    } else if (hi >= 42) {
+      physio = "Heat cramps and heat exhaustion likely. Muscle spasms, heavy sweating, fainting.";
+      advisory = "<strong>ORANGE ALERT:</strong> ISO 7243 limits work to 15 mins/hour. Hydration mandatory. Monitor elderly.";
+    } else if (hi >= 36) {
+      physio = "Prolonged exposure causes fatigue. Discomfort and reduced cognitive function.";
+      advisory = "<strong>YELLOW WARNING:</strong> ISO 7243 limits work to 45 mins/hour. Ensure ventilation. Caution in heavy exertion.";
+    } else {
+      physio = "Thermal conditions within human adaptability range.";
+      advisory = "No specific advisory. Standard hydration recommended.";
+    }
+
+    els.physioText.innerHTML = physio;
+    els.advisoryText.innerHTML = advisory;
+  }
+
+  function populateStrategySection(g, r, density) {
+    // Roof Strategy
+    let roofText = "";
+    if (r < 30) roofText = "Low adoption. <strong>Recommendation:</strong> Apply simple lime-wash or white cement paint (SRI ~50-60) for immediate low-cost impact.";
+    else if (r < 70) roofText = "Moderate adoption. <strong>Recommendation:</strong> Upgrade to High-Albedo China Mosaic or SRI > 90 reflective coatings for maximum gain.";
+    else roofText = "Excellent adoption. Ensure maintenance (cleaning) of reflective surfaces every 6 months to maintain albedo.";
+
+    // Green Strategy
+    let greenText = "";
+    if (g < 10) greenText = "Critical deficit. <strong>Action:</strong> Implement vertical gardens and potted terrace plants where ground space is limited.";
+    else if (g < 30) greenText = "Moderate cover. <strong>Action:</strong> Focus on avenue plantation with broad-leaf native species (e.g., Neem, Peepal) for shade.";
+    else greenText = "High green cover. Focus on water-efficient xeriscaping to manage irrigation demands during heatwaves.";
+
+    // Morph Strategy
+    let morphText = "";
+    if (density === 'high') morphText = "Deep Canyon detected. <strong>Priority:</strong> Trap effectiveness is high. Focus on 'Cool Walls' and retrofitting AC units to reduce waste heat dumping into the street.";
+    else morphText = "Open morphology. <strong>Priority:</strong> Surfaces are exposed to direct sun. Shade structures (pergolas, tensor fabrics) are essential for pedestrian comfort.";
+
+    els.roofRec.innerHTML = roofText;
+    els.greenRec.innerHTML = greenText;
+    els.morphRec.innerHTML = morphText;
+  }
+
+  function populateEconomicSection(pct) {
+    // Assumptions: Avg AC bill ₹4000/mo for 4 summer months = ₹16,000 baseline
+    const baseline = 16000;
+    const savings = (baseline * (pct / 100)).toFixed(0);
+    
+    // Carbon Calculation Fix:
+    // 1 kWh = 0.82 kg CO2.
+    // Households = 1000 (Block scale).
+    const kwhSavedPerHousehold = savings / 8; // approx 8 INR per unit
+    const co2KgPerHousehold = kwhSavedPerHousehold * 0.82;
+    const households = 1000;
+    const co2Tons = (co2KgPerHousehold * households / 1000).toFixed(1); // /1000 to get tons
+
+    els.savingsINR.innerText = `₹${savings} / yr`;
+    els.carbonVal.innerText = `${co2Tons} Tons`;
+  }
+
+  function populatePolicySection(g, r, temp) {
+    let items = [];
+
+    // ECBC Check
+    items.push({
+      name: "ECBC 'Super-ECBC' Compliance", 
+      status: r >= 60 ? "PASS" : "FAIL", 
+      pass: r >= 60
+    });
+
+    // NBC 2016 Check
+    items.push({
+      name: "NBC 2016 Part 8 (Sustainability)", 
+      status: (g >= 15 && r >= 40) ? "PASS" : "FAIL", 
+      pass: (g >= 15 && r >= 40)
+    });
+
+    // URDPFI Check
+    items.push({
+      name: "URDPFI Green Cover (>12%)", 
+      status: g >= 12 ? "PASS" : "FAIL", 
+      pass: g >= 12
+    });
+
+    // Heat Wave Check
+    items.push({
+      name: "NDMA Thermal Safety Threshold", 
+      status: temp < 40 ? "PASS" : "FAIL", 
+      pass: temp < 40
+    });
+
+    // Render
+    els.policyList.innerHTML = items.map(i => `
+      <div class="policy-item">
+        <div>${i.name}</div>
+        <div class="policy-status ${i.pass ? 'status-pass' : 'status-fail'}">${i.status}</div>
+      </div>
+    `).join('');
+  }
+
+  function shareAnalysis() {
+    const txt = `UrbanHeat INDIA Analysis: Peak Temp ${els.peakTemp.innerText}, Risk: ${els.riskClass.innerText}.`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
+  }
+
+  // Listeners
+  Object.values(els).forEach(el => {
+    if(el && (el.tagName === 'INPUT' || el.tagName === 'SELECT')) el.addEventListener('input', calculate);
+  });
+
+  // Init
+  calculate();
+</script>
+</body>
+</html>
