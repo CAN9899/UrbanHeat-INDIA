@@ -411,6 +411,62 @@ button:hover {
   color: white;
 }
 
+/* SHARE MODAL */
+.share-modal {
+  position: fixed; inset: 0;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.2s ease-out;
+}
+.share-content {
+  background: white;
+  border: 1px solid var(--border-strong);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  text-align: center;
+}
+.share-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.share-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.share-link:hover {
+  background: var(--text-main);
+  color: white;
+  border-color: var(--text-main);
+}
+.close-share {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--text-muted);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding-bottom: 0.25rem;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 /* FOOTER */
 .report-footer {
   margin-top: 5rem;
@@ -453,7 +509,7 @@ button:hover {
     print-color-adjust: exact; 
   }
   
-  aside, .action-bar { display: none !important; }
+  aside, .action-bar, .share-modal { display: none !important; }
   .app-container { display: block; grid-template-columns: 1fr; }
   main { padding: 0; max-width: 100%; margin: 0; padding-bottom: 0; }
   
@@ -673,9 +729,34 @@ button:hover {
       <button onclick="window.print()">
         <i class="ph ph-printer"></i> Download Official Dossier (PDF)
       </button>
-      <button onclick="shareAnalysis()">
+      <button onclick="openShare()">
         <i class="ph ph-share-network"></i> Share Analysis
       </button>
+    </div>
+
+    <!-- SHARE MODAL -->
+    <div id="shareModal" class="share-modal" onclick="if(event.target === this) closeShare()">
+      <div class="share-content">
+        <div style="font-weight:700; margin-bottom:0.5rem; text-transform:uppercase; font-size:0.9rem;">Share Your Report</div>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:2rem;">Spread awareness about urban heat resilience.</p>
+        
+        <div class="share-grid">
+          <a id="shareWa" target="_blank" class="share-link">
+            <i class="ph ph-whatsapp-logo" style="font-size:1.5rem; color:#25D366;"></i> WhatsApp
+          </a>
+          <a id="shareX" target="_blank" class="share-link">
+            <i class="ph ph-x-logo" style="font-size:1.5rem;"></i> X (Twitter)
+          </a>
+          <a id="shareLi" target="_blank" class="share-link">
+            <i class="ph ph-linkedin-logo" style="font-size:1.5rem; color:#0a66c2;"></i> LinkedIn
+          </a>
+          <a id="shareSms" class="share-link">
+            <i class="ph ph-chat-text" style="font-size:1.5rem; color:var(--text-main);"></i> SMS / Text
+          </a>
+        </div>
+
+        <button class="close-share" onclick="closeShare()">Close</button>
+      </div>
     </div>
 
     <!-- FOOTER WITH CREDITS -->
@@ -756,6 +837,34 @@ button:hover {
   };
 
   document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('en-GB');
+
+  // --- SHARE FUNCTIONALITY ---
+  function openShare() {
+    const temp = els.peakTemp.innerText;
+    const risk = els.riskClass.innerText;
+    const toolUrl = "https://can9899.github.io/UrbanHeat-INDIA/";
+    const text = `My UrbanHeat INDIA Report: Peak Temp ${temp}, Risk Level: ${risk}. Check your neighborhood resilience here:`;
+
+    // 1. WhatsApp
+    document.getElementById('shareWa').href = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + " " + toolUrl)}`;
+
+    // 2. X (Twitter)
+    document.getElementById('shareX').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(toolUrl)}`;
+
+    // 3. LinkedIn (URL Focus)
+    document.getElementById('shareLi').href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(toolUrl)}`;
+
+    // 4. SMS
+    const smsBody = `${text} ${toolUrl}`;
+    document.getElementById('shareSms').href = `sms:?body=${encodeURIComponent(smsBody)}`;
+
+    // Show Modal
+    document.getElementById('shareModal').style.display = 'flex';
+  }
+
+  function closeShare() {
+    document.getElementById('shareModal').style.display = 'none';
+  }
 
   // --- MAIN CALCULATION ENGINE ---
   function calculate() {
@@ -944,11 +1053,6 @@ button:hover {
         <div class="policy-status ${i.pass ? 'status-pass' : 'status-fail'}">${i.status}</div>
       </div>
     `).join('');
-  }
-
-  function shareAnalysis() {
-    const txt = `UrbanHeat INDIA Analysis: Peak Temp ${els.peakTemp.innerText}, Risk: ${els.riskClass.innerText}.`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
   }
 
   // Listeners
