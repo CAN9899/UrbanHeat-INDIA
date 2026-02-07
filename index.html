@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>UrbanHeat INDIA | Public Decision Support Tool</title>
+<title>UrbanHeat INDIA | Advanced Decision Support System</title>
 
 <!-- Fonts & Icons -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -538,10 +538,10 @@ button:hover {
 
     <!-- 1. BASELINE -->
     <div class="control-section">
-      <h3><i class="ph ph-map-pin"></i> 01. Location Details</h3>
+      <h3><i class="ph ph-map-pin"></i> 01. Site Baseline</h3>
       
       <div class="input-group">
-        <label>City / Climate</label>
+        <label>Climate Zone (IMD)</label>
         <select id="climateZone">
           <option value="composite">Composite (e.g., Delhi, Lucknow)</option>
           <option value="warm_humid">Warm & Humid (e.g., Mumbai)</option>
@@ -551,10 +551,10 @@ button:hover {
       </div>
 
       <div class="input-group">
-        <label>Neighborhood Type</label>
-        <div class="helper">Crowded buildings trap more heat.</div>
+        <label>Urban Canyon / Density</label>
+        <div class="helper">Determines Sky View Factor (SVF) & heat trapping.</div>
         <select id="density">
-          <option value="high">Dense / Crowded (Deep Canyon)</option>
+          <option value="high">High Density (Deep Canyon H/W > 2)</option>
           <option value="med">Medium Density</option>
           <option value="low">Open / Low Density</option>
         </select>
@@ -563,7 +563,7 @@ button:hover {
 
     <!-- 2. INTERVENTIONS -->
     <div class="control-section">
-      <h3><i class="ph ph-sliders-horizontal"></i> 02. Your Design</h3>
+      <h3><i class="ph ph-sliders-horizontal"></i> 02. Interventions</h3>
       
       <div class="input-group">
         <label>
@@ -571,25 +571,25 @@ button:hover {
           <span id="greenVal">15%</span>
         </label>
         <input type="range" id="greenCover" min="0" max="60" value="15">
-        <div class="helper">More trees = Cooler air.</div>
+        <div class="helper">Permeable surfaces & evapotranspiration.</div>
       </div>
 
       <div class="input-group">
         <label>
-          <span>Cool Roofs</span>
+          <span>Cool Roof Adoption</span>
           <span id="roofVal">10%</span>
         </label>
         <input type="range" id="coolRoof" min="0" max="100" value="10">
-        <div class="helper">White paint or reflective tiles.</div>
+        <div class="helper">High SRI paints/tiles (>78 SRI).</div>
       </div>
 
       <div class="input-group">
         <label>
-          <span>Traffic & AC Load</span>
+          <span>Anthropogenic Load</span>
           <span id="trafficVal">Medium</span>
         </label>
         <input type="range" id="traffic" min="1" max="3" step="1" value="2">
-        <div class="helper">Heat from cars and AC units.</div>
+        <div class="helper">Traffic intensity & AC waste heat.</div>
       </div>
     </div>
   </aside>
@@ -599,7 +599,7 @@ button:hover {
     
     <header>
       <div>
-        <div style="font-family:'JetBrains Mono'; font-size:0.8rem; margin-bottom:0.5rem; text-transform:uppercase;">Decision Support System</div>
+        <div style="font-family:'JetBrains Mono'; font-size:0.8rem; margin-bottom:0.5rem; text-transform:uppercase;">Advanced Decision Support System</div>
         <h1>Urban Heat Resilience Report (UHRR)</h1>
       </div>
       <div class="report-meta">
@@ -615,13 +615,13 @@ button:hover {
       
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-label">Peak Summer Temp</div>
+          <div class="kpi-label">Projected Peak Temp</div>
           <div class="kpi-value" id="peakTemp">--</div>
           <div class="kpi-context" id="uhiDelta">--</div>
         </div>
         
         <div class="kpi-card">
-          <div class="kpi-label">Feels Like Temp</div>
+          <div class="kpi-label">Heat Index (Feels Like)</div>
           <div class="kpi-value" id="heatIndex">--</div>
           <div class="kpi-context">
             <span id="riskLabel">--</span>
@@ -630,9 +630,9 @@ button:hover {
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-label">AC Energy Saved</div>
+          <div class="kpi-label">Cooling Demand</div>
           <div class="kpi-value" id="energySave">--</div>
-          <div class="kpi-context">vs. Standard House</div>
+          <div class="kpi-context">vs. Business as Usual (BAU)</div>
         </div>
       </div>
     </section>
@@ -696,7 +696,7 @@ button:hover {
       <div class="econ-grid">
         <div class="econ-box">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size:0.8rem; font-weight:700;">EST. MONEY SAVED</div>
+            <div style="font-size:0.8rem; font-weight:700;">EST. ENERGY SAVINGS</div>
             <i class="ph ph-currency-inr"></i>
           </div>
           <div class="econ-val" id="savingsINR">₹0 / yr</div>
